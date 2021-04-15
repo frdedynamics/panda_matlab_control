@@ -42,6 +42,16 @@ load mean_var_linconstraint_rotated_z.mat
 m_interpolated = interp1(1:length(m), m, linspace(1,length(m),UI.motion_duration/UI.timestep));
 v_interpolated = interp1(1:length(v), v, linspace(1,length(v),UI.motion_duration/UI.timestep));
 
+% Sanity check
+warning('No sanity.')
+
+%% Task space trajectory
+
+%% Joint space trajectory
+
+%% Null space 
+
+
 
 
 
