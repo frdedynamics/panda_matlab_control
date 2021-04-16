@@ -9,6 +9,8 @@ UI.port = 11311;
 UI.timestep = 0.001;
 UI.motion_duration = 12;
 
+UI.max_joint_change = 5*pi/180*ones(7,1); % rad/s
+
 % User eval
 if UI.simulation
     UI.ros_master_ip = 'localhost';
@@ -20,9 +22,12 @@ UI.masterURI = "http://" + UI.ros_master_ip + ":" + UI.port;
 
 UI.t = 0:UI.timestep:(UI.motion_duration - UI.timestep);
 
+%% Add paths
+addpath ./functions
+
 %% Get RBT
 [robot, robotData] = loadrobot('frankaEmikaPanda',...
-    'DataFormat', 'column',...
+    'DataFormat', 'row',...
     'Gravity', [0, 0, -9.80665]);
 removeBody(robot,'panda_leftfinger');
 removeBody(robot,'panda_rightfinger');
@@ -44,6 +49,10 @@ XYZ_path = m_interpolated(:,1:3);
 Quat_path = m_interpolated(:,4:7);
 Euler_path = quat2eul(Quat_path);
 
+%% Sanity check
+warning('No sanity.')
+
+%% Transformation matrix
 Transformations = zeros(4,4,length(m_interpolated));
 for i=1:length(m_interpolated)
     Transformations(1:3,4,i) = XYZ_path(i,:)';
@@ -51,16 +60,56 @@ for i=1:length(m_interpolated)
     Transformations(4,4,i) = 1;
 end
 
-%% Sanity check
-warning('No sanity.')
+%% ik and get q0
+ik = inverseKinematics('RigidBodyTree', robot);
+[q0,solnInfo] = ik('panda_fingertipcenter', Transformations(:,:,1), ...
+    [0.3 0.3 0.3 0.9 0.9 0.9], robot.homeConfiguration);
 
+if solnInfo.ExitFlag~=1 || ~strcmp(solnInfo.Status, 'success')
+    warning('q0 not found correctly.')
+end
 
+%% gik
+gik = generalizedInverseKinematics('RigidBodyTree',robot);
+gik.ConstraintInputs = {'joint','pose'};
+limitJointChange = constraintJointBounds(robot);
+limitJointChange.Weights = [1 1 1 1 1 1 1];
+hw_joint_bounds = limitJointChange.Bounds;
 
-
-%% Task space trajectory
+poseTgt = constraintPoseTarget('panda_fingertipcenter');
+poseTgt.OrientationTolerance = 3*pi/180;
+poseTgt.PositionTolerance = 0.1/100; 
+poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
 %% Joint space trajectory
 
+qd = zeros(length(m_interpolated),7);
+disp('Inverse kinematics..')
+tic
+for i=1:length(m_interpolated)
+    if toc > 2.5
+        qd(i-1,:)
+        tic
+    end
+    
+    if i==1
+        initialguess = q0;
+    elseif solnInfo.ExitFlag==1 && strcmp(solnInfo.Status, 'success')
+        initialguess = qd(i-1,:);
+    else
+        % NO change
+    end
+    
+    poseTgt.TargetTransform = Transformations(:,:,i);
+    if i>1
+        limitJointChange.Bounds = update_joint_limits(...
+            hw_joint_bounds, UI.max_joint_change*UI.timestep, qd(i-1,:));
+    end
+    
+    [qd(i,:), solnInfo] = gik(initialguess,limitJointChange,poseTgt);
+    
+end
+disp('Inverse kinematics done.')
 
 %% Null space 
 
