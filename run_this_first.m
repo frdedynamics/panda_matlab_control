@@ -20,20 +20,16 @@ UI.masterURI = "http://" + UI.ros_master_ip + ":" + UI.port;
 
 UI.t = 0:UI.timestep:UI.motion_duration;
 
-%% ROS
-rosinit(UI.masterURI)
-
 %% Get RBT
-robot = loadrobot('frankaEmikaPanda', 'DataFormat', 'column');
+[robot, robotData] = loadrobot('frankaEmikaPanda',...
+    'DataFormat', 'column',...
+    'Gravity', [0, 0, -9.80665]);
 removeBody(robot,'panda_leftfinger');
 removeBody(robot,'panda_rightfinger');
 panda_fingertipcenter = rigidBody('panda_fingertipcenter');
 setFixedTransform(panda_fingertipcenter.Joint, [0 pi -0.1 0], 'dh');
 addBody(robot,panda_fingertipcenter,'panda_hand');
 %     interactiveRigidBodyTree(robot);
-
-robot.Gravity = [0, 0, -9.80665];
-
 
 %% Get data
 load mean_var_linconstraint_rotated_z.mat
@@ -51,7 +47,8 @@ warning('No sanity.')
 
 %% Null space 
 
-
+%% ROS
+rosinit(UI.masterURI)
 
 
 
