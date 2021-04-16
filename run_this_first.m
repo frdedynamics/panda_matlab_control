@@ -85,10 +85,11 @@ poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
 qd = zeros(length(m_interpolated),7);
 disp('Inverse kinematics..')
+tmp = length(m_interpolated);
 tic
 for i=1:length(m_interpolated)
-    if toc > 2.5
-        qd(i-1,:)
+    if toc > 30
+        100*i/tmp
         tic
     end
     
