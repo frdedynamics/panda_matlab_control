@@ -11,7 +11,9 @@ UI.port = 11311;
 UI.timestep = 0.001;
 UI.motion_duration = 20;
 
-UI.max_joint_change = 90*pi/180*ones(7,1); % rad/s
+UI.max_joint_change = inf*pi/180*ones(7,1); % rad/s
+
+UI.show_me_a_movie = 0;
 
 % User eval
 if UI.simulation
@@ -90,7 +92,7 @@ limitJointChange.Weights = [1 1 1 1 1 1 1];
 hw_joint_bounds = limitJointChange.Bounds;
 
 poseTgt = constraintPoseTarget('panda_fingertipcenter');
-poseTgt.OrientationTolerance = 1*pi/180;
+poseTgt.OrientationTolerance = 0.5*pi/180;
 poseTgt.PositionTolerance = 0.1/100; 
 poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
@@ -136,25 +138,49 @@ disp('Inverse kinematics done.')
 %%
 qd = qd(1:ik_step_size:length(m_interpolated),:);
 
+
+%%
 kmi = zeros(length(qd),1);
 for i=1:length(qd)
     J = robot.geometricJacobian(qd(i,:), 'panda_fingertipcenter');
     kmi(i) = max(0, det(J * J'));
 end
 
-if ik_step_size > 1
-    qd_interpolated = interp1(1:length(qd), qd, linspace(1,length(qd),length(m_interpolated)));
-else
-    qd_interpolated = qd;
+%%
+qd_filtered = NaN(size(qd));
+for i=1:7
+    qd_filtered(:,i) = smooth(qd(:,i), ik_step_size, 'moving');
 end
 
-clear tmp_qd
+if ik_step_size > 1
+    qd_interpolated = interp1(1:length(qd), ...
+        qd_filtered, ...
+        linspace(1,length(qd), ...
+        length(m_interpolated)), ...
+        'spline');
+else
+    qd_interpolated = qd_filtered;
+end
+
+%%
+XYZ_path_filtered = NaN(size(XYZ_path));
+Quat_path_filtered = NaN(size(Quat_path));
+Euler_path_filtered = NaN(size(Euler_path));
+
+for i=1:length(XYZ_path)
+    tmp = robot.getTransform(qd_interpolated(i,:), 'panda_fingertipcenter');
+    XYZ_path_filtered(i,:) = tmp(1:3,4)';
+    Quat_path_filtered(i,:) = rotm2quat(tmp(1:3,1:3));
+    Euler_path_filtered(i,:) = quat2eul(Quat_path_filtered(i,:));
+end
+
 
 %% Null space 
 
 %% Plot
 run ./scripts/Plot_Paths.m
 
+figure(2)
 %% ROS
 %rosinit(UI.masterURI)
 

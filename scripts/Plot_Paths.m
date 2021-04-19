@@ -9,46 +9,92 @@ legend_font_weight = xy_axis_font_weight;
 %% Plot desired task space path
 h = figure(fignum); clf;
 ax = axes(h);
-tiled_ = tiledlayout(2,2, 'Padding', 'compact', 'TileSpacing', 'compact');
+tiled_ = tiledlayout(4,2, 'Padding', 'compact', 'TileSpacing', 'compact');
 tiled_.Title.String = 'Planned cartesian path';
 tiled_.Title.FontSize = 15;
 
-
+hSub=nexttile(7);
+plot(1, nan, ... 
+    'r', 'LineWidth', 1.5);
+hold on;
+plot(1, nan, ... 
+    'b', 'LineWidth', 1.5);
+plot(1, nan, ... 
+    'g', 'LineWidth', 1.5);
+set(hSub, 'Visible', 'off');
+legend('x','y', 'z', ...
+    'interpreter', 'latex','FontSize', legend_font_size,...
+        'FontWeight', legend_font_weight)%,...
+    %'Location','southoutside')
+    
+    
 nexttile(1)
-plot(UI.t, XYZ_path(:,1),'r')
+plot(UI.t, XYZ_path(:,1),'r--')
 hold on
-plot(UI.t, XYZ_path(:,2),'b')
-plot(UI.t, XYZ_path(:,3),'g')
+plot(UI.t, XYZ_path_filtered(:,1),'r')
+plot(UI.t, XYZ_path(:,2),'b--')
+plot(UI.t, XYZ_path_filtered(:,2),'b')
+plot(UI.t, XYZ_path(:,3),'g--')
+plot(UI.t, XYZ_path_filtered(:,3),'g')
 ylabel('XYZ [m]')
-xlabel('t [s]')
-legend('x', 'y', 'z')
 
 nexttile(3)
-plot(UI.t(2:end), diff(XYZ_path(:,3))./UI.timestep,'r')
+plot(UI.t(2:end), diff(XYZ_path(:,3))./UI.timestep,'r--')
 hold on
-plot(UI.t(2:end), diff(XYZ_path(:,2))./UI.timestep,'b')
-plot(UI.t(2:end), diff(XYZ_path(:,1))./UI.timestep,'g')
+plot(UI.t(2:end), diff(XYZ_path_filtered(:,3))./UI.timestep,'r')
+plot(UI.t(2:end), diff(XYZ_path(:,2))./UI.timestep,'b--')
+plot(UI.t(2:end), diff(XYZ_path_filtered(:,2))./UI.timestep,'b')
+plot(UI.t(2:end), diff(XYZ_path(:,1))./UI.timestep,'g--')
+plot(UI.t(2:end), diff(XYZ_path_filtered(:,1))./UI.timestep,'g')
 ylabel('XYZ [m/s]')
-xlabel('t [s]')
-legend('x', 'y', 'z')
 
 nexttile(2)
-plot(UI.t, Euler_path(:,1),'r')
+plot(UI.t, Euler_path(:,1),'r--')
 hold on
-plot(UI.t, Euler_path(:,2),'b')
-plot(UI.t, Euler_path(:,3),'g')
+plot(UI.t, Euler_path_filtered(:,1),'r')
+plot(UI.t, Euler_path(:,2),'b--')
+plot(UI.t, Euler_path_filtered(:,2),'b')
+plot(UI.t, Euler_path(:,3),'g--')
+plot(UI.t, Euler_path_filtered(:,3),'g')
 ylabel('Euler [rad]')
-xlabel('t [s]')
-legend('x', 'y', 'z')
 
 nexttile(4)
-plot(UI.t(2:end), diff(Euler_path(:,3))./UI.timestep,'r')
+plot(UI.t(2:end), diff(Euler_path(:,3))./UI.timestep,'r--')
 hold on
-plot(UI.t(2:end), diff(Euler_path(:,2))./UI.timestep,'b')
-plot(UI.t(2:end), diff(Euler_path(:,1))./UI.timestep,'g')
+plot(UI.t(2:end), diff(Euler_path_filtered(:,3))./UI.timestep,'r')
+plot(UI.t(2:end), diff(Euler_path(:,2))./UI.timestep,'b--')
+plot(UI.t(2:end), diff(Euler_path_filtered(:,2))./UI.timestep,'b')
+plot(UI.t(2:end), diff(Euler_path(:,1))./UI.timestep,'g--')
+plot(UI.t(2:end), diff(Euler_path_filtered(:,1))./UI.timestep,'g')
 ylabel('Euler [rad/s]')
+
+nexttile(5)
+plot(UI.t, XYZ_path(:,1) - XYZ_path_filtered(:,1),'r')
+hold on
+plot(UI.t, XYZ_path(:,2) - XYZ_path_filtered(:,2),'b')
+plot(UI.t, XYZ_path(:,3) - XYZ_path_filtered(:,3),'g')
+plot(UI.t, ...
+        ones(length(UI.t),1)*poseTgt.PositionTolerance, ...
+        'r--', 'LineWidth', 1.5)
+plot(UI.t, ...
+        ones(length(UI.t),1)*-poseTgt.PositionTolerance, ...
+        'r--', 'LineWidth', 1.5)
+ylabel('XYZ error [m]')
 xlabel('t [s]')
-legend('x', 'y', 'z')
+
+nexttile(6)
+plot(UI.t, Euler_path(:,1) - Euler_path_filtered(:,1),'r')
+hold on
+plot(UI.t, Euler_path(:,2) - Euler_path_filtered(:,2),'b')
+plot(UI.t, Euler_path(:,3) - Euler_path_filtered(:,3),'g')
+plot(UI.t, ...
+        ones(length(UI.t),1)*poseTgt.OrientationTolerance, ...
+        'r--', 'LineWidth', 1.5)
+plot(UI.t, ...
+        ones(length(UI.t),1)*-poseTgt.OrientationTolerance, ...
+        'r--', 'LineWidth', 1.5)
+ylabel('Euler error [rad]')
+xlabel('t [s]')
 
 %%
 fignum = fignum + 1;
@@ -56,11 +102,11 @@ fignum = fignum + 1;
 %% Plot desired joint paths
 h = figure(fignum); clf;
 ax = axes(h);
-tiled_ = tiledlayout(3,7, 'Padding', 'compact', 'TileSpacing', 'compact');
+tiled_ = tiledlayout(5,7, 'Padding', 'compact', 'TileSpacing', 'compact');
 tiled_.Title.String = 'Planned joint path';
 tiled_.Title.FontSize = 15;
 
-hSub=nexttile(19);
+hSub=nexttile(33);
 plot(1, nan, ... 
     'r--', 'LineWidth', 1.5);
 hold on;
@@ -106,6 +152,30 @@ for i=1:7
         'r--', 'LineWidth', 1.5)
     ylabel("J" + i + " [rad/s]")
     
+    nexttile(14+i)
+    plot(UI.t(3:end), diff(diff(qd_interpolated(:,i))/UI.timestep)/UI.timestep, 'LineWidth', 1.5)
+    hold on
+    grid on
+    plot(UI.t(3:end), ...
+        ones(length(UI.t(3:end)),1)*HW.Joint.AccelLimit(i,1), ...
+        'r--', 'LineWidth', 1.5)
+    plot(UI.t(3:end), ...
+        ones(length(UI.t(3:end)),1)*HW.Joint.AccelLimit(i,2), ...
+        'r--', 'LineWidth', 1.5)
+    ylabel("J" + i + " [rad/s^2]")
+    
+    nexttile(21+i)
+    plot(UI.t(4:end), diff(diff(diff(qd_interpolated(:,i))/UI.timestep)/UI.timestep)/UI.timestep, 'LineWidth', 1.5)
+    hold on
+    grid on
+    plot(UI.t(4:end), ...
+        ones(length(UI.t(4:end)),1)*HW.Joint.JerkLimit(i,1), ...
+        'r--', 'LineWidth', 1.5)
+    plot(UI.t(4:end), ...
+        ones(length(UI.t(4:end)),1)*HW.Joint.JerkLimit(i,2), ...
+        'r--', 'LineWidth', 1.5)
+    ylabel("J" + i + " [rad/s^3]")
+    
     if i==4
         xlabel('t [s]')
     end
@@ -132,11 +202,13 @@ grid on
 fignum = fignum + 1;
 
 %% Visualize
-h = figure(fignum); clf;
+if UI.show_me_a_movie
+    h = figure(fignum); clf;
 
-for i=1:10:length(qd)
-    figure(fignum);
-    show(robot,qd(i,:));
-    
-    pause(0.1)
+    for i=1:250:length(qd_interpolated)
+        figure(fignum);
+        show(robot,qd_interpolated(i,:));
+
+        pause(0.1)
+    end
 end
