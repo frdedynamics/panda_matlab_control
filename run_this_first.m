@@ -92,7 +92,7 @@ limitJointChange.Weights = [1 1 1 1 1 1 1];
 hw_joint_bounds = limitJointChange.Bounds;
 
 poseTgt = constraintPoseTarget('panda_fingertipcenter');
-poseTgt.OrientationTolerance = 0.5*pi/180;
+poseTgt.OrientationTolerance = 0.25*pi/180;
 poseTgt.PositionTolerance = 0.1/100; 
 poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
@@ -150,19 +150,29 @@ end
 qd_filtered = NaN(size(qd));
 for i=1:7
     qd_filtered(:,i) = smooth(qd(:,i), ik_step_size, 'moving');
+%     qd_filtered(:,i) = lowpass(qd_filtered(:,i), 25, 1/(UI.timestep*ik_step_size));
 end
+
+% qd_filtered = lp(qd_filtered,0.4);
 
 if ik_step_size > 1
     qd_interpolated = interp1(1:length(qd), ...
         qd_filtered, ...
         linspace(1,length(qd), ...
         length(m_interpolated)), ...
-        'spline');
+        'cubic');
 else
     qd_interpolated = qd_filtered;
 end
 
-%%
+for i=1:7
+    qd_interpolated(:,i) = smooth(qd_interpolated(:,i), 40, 'moving');
+%     qd_interpolated(:,i) = lowpass(qd_interpolated(:,i), 80, 1/(UI.timestep));
+end
+
+% qd_interpolated = lp(qd_interpolated,0.05);
+
+%
 XYZ_path_filtered = NaN(size(XYZ_path));
 Quat_path_filtered = NaN(size(Quat_path));
 Euler_path_filtered = NaN(size(Euler_path));
@@ -175,12 +185,12 @@ for i=1:length(XYZ_path)
 end
 
 
-%% Null space 
+% Null space 
 
-%% Plot
+% Plot
 run ./scripts/Plot_Paths.m
 
-figure(2)
+figure(1)
 %% ROS
 %rosinit(UI.masterURI)
 
