@@ -11,7 +11,7 @@ UI.port = 11311;
 UI.timestep = 0.001;
 UI.motion_duration = 20;
 
-UI.max_joint_change = 60*pi/180*ones(7,1); % rad/s
+UI.max_joint_change = 90*pi/180*ones(7,1); % rad/s
 
 % User eval
 if UI.simulation
@@ -96,10 +96,10 @@ poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
 %% Joint space trajectory
 
-qd = zeros(length(m_interpolated),7);
+qd = NaN(length(m_interpolated),7);
 disp('Inverse kinematics..')
 tmp = length(m_interpolated);
-tmp2 = zeros(length(m_interpolated));
+tmp2 = zeros(length(m_interpolated),1);
 tic
 ik_step_size = 20;
 for i=1:ik_step_size:length(m_interpolated)
@@ -111,7 +111,7 @@ for i=1:ik_step_size:length(m_interpolated)
     if i==1
         initialguess = q0;
     elseif solnInfo.ExitFlag==1 && strcmp(solnInfo.Status, 'success') || 1
-        initialguess = qd(i-1,:);
+        initialguess = qd(i-ik_step_size,:);
     else
         % NO change
     end
@@ -119,17 +119,36 @@ for i=1:ik_step_size:length(m_interpolated)
     poseTgt.TargetTransform = Transformations(:,:,i);
     if i>1
         limitJointChange.Bounds = update_joint_limits(...
-            hw_joint_bounds, UI.max_joint_change*UI.timestep*ik_step_size, qd(i-1,:));
+            hw_joint_bounds, ...
+            UI.max_joint_change*UI.timestep*ik_step_size, ...
+            qd(i-ik_step_size,:));
     end
     
     [configSoln, solnInfo] = gik(initialguess,limitJointChange,poseTgt);
-    qd(i:(i+ik_step_size-1),:) = ones(ik_step_size,1).*configSoln;
+    qd(i,:) = configSoln;
     if solnInfo.ExitFlag~=1
         tmp2(i) = 1;
     end
     
 end
 disp('Inverse kinematics done.')
+
+%%
+qd = qd(1:ik_step_size:length(m_interpolated),:);
+
+kmi = zeros(length(qd),1);
+for i=1:length(qd)
+    J = robot.geometricJacobian(qd(i,:), 'panda_fingertipcenter');
+    kmi(i) = max(0, det(J * J'));
+end
+
+if ik_step_size > 1
+    qd_interpolated = interp1(1:length(qd), qd, linspace(1,length(qd),length(m_interpolated)));
+else
+    qd_interpolated = qd;
+end
+
+clear tmp_qd
 
 %% Null space 
 
