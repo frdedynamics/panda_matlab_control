@@ -11,7 +11,7 @@ UI.port = 11311;
 UI.timestep = 0.001;
 UI.motion_duration = 20;
 
-UI.max_joint_change = 5*pi/180*ones(7,1); % rad/s
+UI.max_joint_change = 60*pi/180*ones(7,1); % rad/s
 
 % User eval
 if UI.simulation
@@ -81,7 +81,7 @@ ik = inverseKinematics('RigidBodyTree', robot);
 if solnInfo.ExitFlag~=1 || ~strcmp(solnInfo.Status, 'success')
     warning('q0 not found correctly.')
 end
-
+q0 = [0 -0.1 0 -1.9 0 2.0 0];
 %% gik
 gik = generalizedInverseKinematics('RigidBodyTree',robot);
 gik.ConstraintInputs = {'joint','pose'};
@@ -110,7 +110,7 @@ for i=1:ik_step_size:length(m_interpolated)
     
     if i==1
         initialguess = q0;
-    elseif solnInfo.ExitFlag==1 && strcmp(solnInfo.Status, 'success')
+    elseif solnInfo.ExitFlag==1 && strcmp(solnInfo.Status, 'success') || 1
         initialguess = qd(i-1,:);
     else
         % NO change
@@ -119,7 +119,7 @@ for i=1:ik_step_size:length(m_interpolated)
     poseTgt.TargetTransform = Transformations(:,:,i);
     if i>1
         limitJointChange.Bounds = update_joint_limits(...
-            hw_joint_bounds, UI.max_joint_change*UI.timestep, qd(i-1,:));
+            hw_joint_bounds, UI.max_joint_change*UI.timestep*ik_step_size, qd(i-1,:));
     end
     
     [configSoln, solnInfo] = gik(initialguess,limitJointChange,poseTgt);
@@ -137,6 +137,6 @@ disp('Inverse kinematics done.')
 run ./scripts/Plot_Paths.m
 
 %% ROS
-rosinit(UI.masterURI)
+%rosinit(UI.masterURI)
 
 

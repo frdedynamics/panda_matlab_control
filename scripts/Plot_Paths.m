@@ -86,3 +86,38 @@ for i=1:7
         xlabel('t [s]')
     end
 end
+
+%% 
+fignum = fignum + 1;
+
+%%
+kmi_yoshi = zeros(length(qd),1);
+kmi_asada = zeros(length(qd),1);
+
+for i=1:length(qd)
+    kmi_yoshi(i) = yoshi(robot, qd(i,:), 'panda_fingertipcenter');
+    kmi_asada(i) = asada(robot, qd(i,:), 'panda_fingertipcenter');
+end
+
+h = figure(fignum); clf;
+ax = axes(h);
+tiled_ = tiledlayout(2,1, 'Padding', 'compact', 'TileSpacing', 'compact');
+tiled_.Title.String = 'Manipulability';
+tiled_.Title.FontSize = 15;
+
+nexttile(1)
+plot(kmi_yoshi);
+
+nexttile(2);
+plot(kmi_asada)
+
+%% 
+fignum = fignum + 1;
+
+%% Visualize
+for i=1:100:length(qd)
+    figure(fignum);
+    show(robot,qd(i,:));
+    
+    pause(0.1)
+end
