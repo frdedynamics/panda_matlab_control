@@ -7,7 +7,7 @@ UI.simulation = 1;
 UI.port = 11311;
 
 UI.timestep = 0.001;
-UI.motion_duration = 12;
+UI.motion_duration = 20;
 
 UI.max_joint_change = 5*pi/180*ones(7,1); % rad/s
 
@@ -24,6 +24,9 @@ UI.t = 0:UI.timestep:(UI.motion_duration - UI.timestep);
 
 %% Add paths
 addpath ./functions
+
+%% Get HW constraints
+run ./scripts/Panda_Limits.m
 
 %% Get RBT
 [robot, robotData] = loadrobot('frankaEmikaPanda',...
@@ -77,7 +80,7 @@ limitJointChange.Weights = [1 1 1 1 1 1 1];
 hw_joint_bounds = limitJointChange.Bounds;
 
 poseTgt = constraintPoseTarget('panda_fingertipcenter');
-poseTgt.OrientationTolerance = 3*pi/180;
+poseTgt.OrientationTolerance = 1*pi/180;
 poseTgt.PositionTolerance = 0.1/100; 
 poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 
@@ -86,8 +89,10 @@ poseTgt.Weights = [0.9 0.9]; %[Orientation Position]
 qd = zeros(length(m_interpolated),7);
 disp('Inverse kinematics..')
 tmp = length(m_interpolated);
+tmp2 = zeros(length(m_interpolated));
 tic
-for i=1:length(m_interpolated)
+ik_step_size = 20;
+for i=1:ik_step_size:length(m_interpolated)
     if toc > 30
         100*i/tmp
         tic
@@ -107,7 +112,11 @@ for i=1:length(m_interpolated)
             hw_joint_bounds, UI.max_joint_change*UI.timestep, qd(i-1,:));
     end
     
-    [qd(i,:), solnInfo] = gik(initialguess,limitJointChange,poseTgt);
+    [configSoln, solnInfo] = gik(initialguess,limitJointChange,poseTgt);
+    qd(i:(i+ik_step_size-1),:) = ones(ik_step_size,1).*configSoln;
+    if solnInfo.ExitFlag~=1
+        tmp2(i) = 1;
+    end
     
 end
 disp('Inverse kinematics done.')
@@ -119,6 +128,5 @@ run ./scripts/Plot_Paths.m
 
 %% ROS
 rosinit(UI.masterURI)
-
 
 
