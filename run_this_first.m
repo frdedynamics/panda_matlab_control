@@ -1,5 +1,7 @@
 clear all; clc;
 
+%% Get HW constraints
+run ./scripts/Panda_Limits.m
 
 %% User interface
 UI = [];
@@ -18,15 +20,23 @@ else
     UI.ros_master_ip = '172.31.1.21';
 end
 
+for i=1:7
+   if UI.max_joint_change(i) > HW.Joint.VelocityLimit(i,2)
+       warning('max_joint_change no good. Setting to max. Check HW limits.')
+       UI.max_joint_change(i) = HW.Joint.VelocityLimit(i,2);
+   end
+   if UI.max_joint_change(i) < 0
+       error('max_joint_change negative. wtf. Check HW limits.')
+       
+   end
+end
+
 UI.masterURI = "http://" + UI.ros_master_ip + ":" + UI.port;
 
 UI.t = 0:UI.timestep:(UI.motion_duration - UI.timestep);
 
 %% Add paths
 addpath ./functions
-
-%% Get HW constraints
-run ./scripts/Panda_Limits.m
 
 %% Get RBT
 [robot, robotData] = loadrobot('frankaEmikaPanda',...
