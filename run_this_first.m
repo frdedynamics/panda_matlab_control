@@ -138,7 +138,6 @@ disp('Inverse kinematics done.')
 %%
 qd = qd(1:ik_step_size:length(m_interpolated),:);
 
-
 %%
 kmi = zeros(length(qd),1);
 for i=1:length(qd)
@@ -184,14 +183,20 @@ for i=1:length(XYZ_path)
     Euler_path_filtered(i,:) = quat2eul(Quat_path_filtered(i,:));
 end
 
+%% Null space 
 
-% Null space 
 
-% Plot
+%% Plot
 run ./scripts/Plot_Paths.m
 
 figure(1)
+
 %% ROS
-%rosinit(UI.masterURI)
+rosinit(UI.masterURI)
+
+%% Simulink
+simulink_desired_joint_path = [];
+simulink_desired_joint_path.time = UI.t';
+simulink_desired_joint_path.signals.values = qd_interpolated;
 
 
