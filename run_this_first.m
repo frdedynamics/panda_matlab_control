@@ -149,10 +149,7 @@ end
 qd_filtered = NaN(size(qd));
 for i=1:7
     qd_filtered(:,i) = smooth(qd(:,i), ik_step_size, 'moving');
-%     qd_filtered(:,i) = lowpass(qd_filtered(:,i), 25, 1/(UI.timestep*ik_step_size));
 end
-
-% qd_filtered = lp(qd_filtered,0.4);
 
 if ik_step_size > 1
     qd_interpolated = interp1(1:length(qd), ...
@@ -166,12 +163,8 @@ end
 
 for i=1:7
     qd_interpolated(:,i) = smooth(qd_interpolated(:,i), 40, 'moving');
-%     qd_interpolated(:,i) = lowpass(qd_interpolated(:,i), 80, 1/(UI.timestep));
 end
 
-% qd_interpolated = lp(qd_interpolated,0.05);
-
-%
 XYZ_path_filtered = NaN(size(XYZ_path));
 Quat_path_filtered = NaN(size(Quat_path));
 Euler_path_filtered = NaN(size(Euler_path));
