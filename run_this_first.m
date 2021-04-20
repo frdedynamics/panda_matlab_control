@@ -7,6 +7,8 @@ run ./scripts/Panda_Limits.m
 UI = [];
 UI.simulation = 1;
 UI.port = 11311;
+UI.real_ros_master_ip = '172.31.1.21';
+UI.sim_ros_master_ip = 'localhost';
 
 UI.timestep = 0.001;
 UI.motion_duration = 20;
@@ -17,9 +19,9 @@ UI.show_me_a_movie = 0;
 
 % User eval
 if UI.simulation
-    UI.ros_master_ip = 'localhost';
+    UI.ros_master_ip = UI.sim_ros_master_ip;
 else
-    UI.ros_master_ip = '172.31.1.21';
+    UI.ros_master_ip = UI.real_ros_master_ip;
 end
 
 for i=1:7
@@ -133,6 +135,7 @@ for i=1:ik_step_size:length(m_interpolated)
     end
     
 end
+clear tmp
 disp('Inverse kinematics done.')
 
 %%
@@ -175,6 +178,7 @@ for i=1:length(XYZ_path)
     Quat_path_filtered(i,:) = rotm2quat(tmp(1:3,1:3));
     Euler_path_filtered(i,:) = quat2eul(Quat_path_filtered(i,:));
 end
+clear tmp
 
 %% Null space 
 
@@ -185,7 +189,7 @@ run ./scripts/Plot_Paths.m
 figure(1)
 
 %% ROS
-rosinit(UI.masterURI)
+run ./scripts/Check_start_ROS.m
 
 %% Simulink
 simulink_desired_joint_path = [];
