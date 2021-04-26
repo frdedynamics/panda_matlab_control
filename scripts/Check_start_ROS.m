@@ -6,6 +6,15 @@ ROS_STA.no_local_ros_core = 0;
 ROS_STA.current_port = NaN;
 ROS_STA.current_ros_master_ip = NaN;
 
+if ~contains(getenv('ROS_MASTER_URI'),UI.masterURI)
+    user_input = input("Should master be " + UI.masterURI + "? 1/0");
+    if user_input == 1
+        setenv('ROS_MASTER_URI',UI.masterURI)
+    else
+        return
+    end
+end
+
 try 
     rosnode list
     ROS_STA.ros_already_running = 1;

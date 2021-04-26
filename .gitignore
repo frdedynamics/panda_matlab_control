@@ -23,6 +23,11 @@ sccprj/
 
 # Matlab code generation folders
 codegen/
+matlab_gen/
+*_ert_rtw/
+build_ros_model*.sh
+*.slxc
+*.tgz
 
 # Simulink autosave extension
 *.autosave
