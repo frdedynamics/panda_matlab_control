@@ -1,3 +1,6 @@
+custom_msg/matlab_gen/
+custom_msg/matlab_msg_gen_ros1/
+
 # Windows default autosave extension
 *.asv
 
