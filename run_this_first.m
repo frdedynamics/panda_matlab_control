@@ -5,13 +5,13 @@ run ./scripts/Panda_Limits.m
 
 %% User interface
 UI = [];
-UI.simulation = 1;
+UI.simulation = 0;
 UI.port = 11311;
 UI.real_ros_master_ip = '172.31.1.21';
 UI.sim_ros_master_ip = 'localhost';
 
 UI.timestep = 0.001;
-UI.motion_duration = 20;
+UI.motion_duration = 40;
 
 UI.max_joint_change = inf*pi/180*ones(7,1); % rad/s
 
