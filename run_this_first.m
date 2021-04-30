@@ -5,7 +5,7 @@ run ./scripts/Panda_Limits.m
 
 %% User interface
 UI = [];
-UI.simulation = 0;
+UI.simulation = 1;
 UI.port = 11311;
 UI.real_ros_master_ip = '172.31.1.21';
 UI.sim_ros_master_ip = 'localhost';
@@ -49,7 +49,7 @@ addpath ./functions
 removeBody(robot,'panda_leftfinger');
 removeBody(robot,'panda_rightfinger');
 tmp_panda_fingertipcenter = rigidBody('panda_fingertipcenter');
-setFixedTransform(tmp_panda_fingertipcenter.Joint, [0 pi -0.1 0], 'dh');
+setFixedTransform(tmp_panda_fingertipcenter.Joint, [0 pi 0.1 0], 'dh');
 addBody(robot,tmp_panda_fingertipcenter,'panda_hand');
 
 %     interactiveRigidBodyTree(robot);
