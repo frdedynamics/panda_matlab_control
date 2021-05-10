@@ -5,7 +5,7 @@ run ./scripts/Panda_Limits.m
 
 %% User interface
 UI = [];
-UI.simulation = 1;
+UI.simulation = 0;
 UI.port = 11311;
 UI.real_ros_master_ip = '172.31.1.21';
 UI.sim_ros_master_ip = 'localhost';
