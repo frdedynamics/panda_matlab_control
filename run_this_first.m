@@ -196,4 +196,15 @@ simulink_desired_joint_path = [];
 simulink_desired_joint_path.time = UI.t';
 simulink_desired_joint_path.signals.values = qd_interpolated;
 
+dqd_interpolated = NaN(size(qd_interpolated));
+dqd_interpolated(1,:) = zeros(1,7);
+for i=1:7
+    dqd_interpolated(2:end,i) = [diff(qd_interpolated(:,i))/UI.timestep];
+end
+
+simulink_desired_joint_path_velocity = [];
+simulink_desired_joint_path_velocity.time = UI.t';
+simulink_desired_joint_path_velocity.signals.values = dqd_interpolated;
+
+
 
